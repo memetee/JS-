@@ -382,62 +382,328 @@ names.slice(1, 3)
 
 
 
-## 理解JavaScript纯函数
+## 副作用的理解
 
-函数式编程中有一个非常重要的概念叫纯函数，JavaScript符合函数式编程的范式，所以也有纯函数的概念；
+-  那么这里又有一个概念，叫做副作用，什么又是副作用呢？
 
-- 在react开发中纯函数是被多次提及的；
-- 比如react中组件就被要求像是一个纯函数（为什么是像，因为还有class组件），redux中有一个reducer的概念，也 是要求必须是一个纯函数；
-- 所以掌握纯函数对于理解很多框架的设计是非常有帮助的；
+- - 副作用（side effect）其实本身是医学的一个概念，比如我们经常说吃什么药本来是为了治病，可能会产生一 些其他的副作用；
+  - 在计算机科学中，也引用了副作用的概念，表示在执行一个函数时，除了返回函数值之外，还对调用函数产生 了附加的影响，比如修改了全局变量，修改参数或者改变外部的存储；
 
-纯函数的维基百科定义：
+- 纯函数在执行的过程中就是不能产生这样的副作用：
 
-- 在程序设计中，若一个函数符合以下条件，那么这个函数被称为纯函数：
-- 此函数在相同的输入值时，需产生相同的输出。
+- - 副作用往往是产生bug的 “温床”。
 
-```javascript
-反例：
+- 什么是副作用呢？
 
-var name = 'abc'
-function foo(number){
-    return name
-}
-foo(123) 
-name = 'wts';
-foo(123)
-这个就是相同的输入，产生了不同的输出，这个函数依赖了外部的变量，但是外部变量发生了改变；
-所以他就不是一个纯函数
+```JS
+var names = ["abc", "cba", "nba", "dna"]
+
+
+// slice只要给它传入一个start/end, 那么对于同一个数组来说, 它会给我们返回确定的值
+// slice函数本身它是不会修改原来的数组
+// slice -> this
+// slice函数本身就是一个纯函数
+// var newNames1 = names.slice(0, 3)
+// console.log(newNames1)
+// console.log(names)
+
+
+// ["abc", "cba", "nba", "dna"]
+// splice在执行时, 有修改掉调用的数组对象本身, 修改的这个操作就是产生的副作用
+// splice不是一个纯函数
+var newNames2 = names.splice(2)
+console.log(newNames2)
+console.log(names)
 ```
 
-- 函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出（例如键盘点击）无关（只跟输入值也就是参数，和函数内部的执行有关，和外部变量无关）。
-- 该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等（例如，触发事件的时候，这个函数不能执行 ）。
-
-
-
-当然上面的定义会过于的晦涩，所以我简单总结一下：
-
-- 确定的输入，一定会产生确定的输出；
-- 函数在执行过程中，不能产生副作用；
 
 
 
 
+- 纯函数练习
+
+```js
+// foo函数是否是一个纯函数?
+// 1.相同的输入一定产生相同的输出
+// 2.在执行的过程中不会产生任何的副作用
+function foo(num1, num2) {
+  return num1 * 2 + num2 * num2
+}
+
+
+// bar不是一个纯函数, 因为它修改了外界的变量
+var name = "abc"
+function bar() {
+  console.log("bar其他的代码执行")
+  name = "cba"
+}
+
+
+bar()
+
+
+console.log(name)
+
+
+// baz也不是一个纯函数, 因为我们修改了传入的参数
+function baz(info) {
+  info.age = 100
+}
+
+
+var obj = {name: "why", age: 18}
+baz(obj)
+console.log(obj)
+
+
+// test是否是一个纯函数? 是一个纯函数
+// function test(info) {
+//   return {
+//     ...info,
+//     age: 100
+//   }
+// }
+
+
+// test(obj)
+// test(obj)
+// test(obj)
+// test(obj)
+
+
+// React的函数组件(类组件)
+function HelloWorld(props) {
+  props.info = {}
+  props.info.name = "why"
+}
+```
+
+
+
+## 纯函数的案例
+
+- 我们来看一个对数组操作的两个函数：
+
+- - slice：slice截取数组时不会对原数组进行任何操作,而是生成一个新的数组；
+  - splice：splice截取数组, 会返回一个新的数组, 也会对原数组进行修改；
+
+- slice就是一个纯函数，不会修改传入的参数；
+
+![image-20220705074715995](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074715995.png)
+
+**八、 我们来自己编写几个案例，来看一下它们是否是纯函数**
+
+![image-20220705074732304](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074732304.png)
+
+![image-20220705074741293](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074741293.png)
+
+
+
+这个不是纯函数，因为他对外部有依赖
+
+![image-20220705074752000](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074752000.png)
+
+严格意义来说，这个函数也不是纯函数，因为他console.log有输出，维基百科说，除了return不允许有任何输出，但是console.log不会产生任何副作用，所以我们可以认为它是纯函数
+
+
+
+## 纯函数的优势
+
+- 为什么纯函数在函数式编程中非常重要呢？
+
+- - 因为你可以安心的编写和安心的使用；
+  - 你在写的时候保证了函数的纯度，只是单纯实现自己的业务逻辑即可，不需要关心传入的内容是如何获得的或 者依赖其他的外部变量是否已经发生了修改；
+  - 你在用的时候，你确定你的输入内容不会被任意篡改，并且自己确定的输入，一定会有确定的输出；
+
+- React中就要求我们无论是函数还是class声明一个组件，这个组件都必须像纯函数一样，保护它们的props不被修 改：
+
+![image-20220705074809863](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074809863.png)
 
 
 
 
 
+## JavaScript柯里化
+
+- 柯里化也是属于函数式编程里面一个非常重要的概念。
+
+- 我们先来看一下维基百科的解释：
+
+- - 在计算机科学中，柯里化（英语：Currying），又译为卡瑞化或加里化；
+  - 是把接收多个参数的函数，变成接受一个单一参数（最初函数的第一个参数）的函数，并且返回接受余下的参 数，而且返回结果的新函数的技术；
+  - 柯里化声称 “如果你固定某些参数，你将得到接受余下参数的一个函数”；
+
+- 维基百科的描述非常的抽象，我们这里做一个总结：
+
+- - 只传递给函数一部分参数来调用它，让它**返回一个函数去处理剩余的参数**；
+  - 这个过程就称之为柯里化；
 
 
 
 
 
+## 柯里化的结构
+
+那么柯里化到底是怎么样的表现呢？
+
+![image-20220705074927911](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074927911.png)
+
+上面这个过程就成为柯里化的过程，它的执行效率没有上面的高
+
+![image-20220705074936731](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074936731.png)
+
+
+
+## 让函数的职责单一
+
+- 那么为什么需要有柯里化呢？
+
+- - 在函数式编程中，我们其实往往希望一个函数处理的问题尽可能的单一，而不是将一大堆的处理过程交给一个 函数来处理；
+  - 那么我们是否就可以将每次传入的参数在单一的函数中进行处理，处理完后在下一个函数中再使用处理后的结 果；
+
+- 比如上面的案例我们进行一个修改：传入的函数需要分别被进行如下处理
+
+- - 第一个参数 + 2
+  - 第二个参数 * 2
+  - 第三个参数 ** 2
+
+![image-20220705074957739](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705074957739.png)
+
+第一个函数，执行x的逻辑，第二个函数，执行y的逻辑，第三个函数执行z的逻辑，并且将所有执行完的逻辑返回出去
 
 
 
 
 
+## 柯里化的复用
+
+- 另外一个使用柯里化的场景是可以帮助我们可以复用参数逻辑：
+
+- - makeAdder函数要求我们传入一个num（并且如果我们需要的话，可以在这里对num进行一些修改）；
+  - 在之后使用返回的函数时，我们不需要再继续传入num了；
+
+![image-20220705075022057](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075022057.png)
+
+```js
+
+
+// function sum(m, n) {
+//   return m + n
+// }
+
+
+// 假如在程序中,我们经常需要把5和另外一个数字进行相加
+// console.log(sum(5, 10))
+// console.log(sum(5, 14))
+// console.log(sum(5, 1100))
+// console.log(sum(5, 555))
+
+
+function makeAdder(count) {
+  count = count * count
+
+
+  return function(num) {
+    return count + num
+  }
+}
+
+
+// var result = makeAdder(5)(10)
+// console.log(result)
+var adder5 = makeAdder(5)
+adder5(10)
+adder5(14)
+adder5(1100)
+adder5(555)
+```
 
 
 
+
+
+## 打印日志的柯里化
+
+- 这里我们在演示一个案例，需求是打印一些日志： 
+
+- - 日志包括时间、类型、信息；
+
+- 普通函数的实现方案如下：
+
+![image-20220705075110587](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075110587.png)
+
+![image-20220705075130634](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075130634.png)
+
+```js
+
+
+function log(date, type, message) {
+  console.log(`[${date.getHours()}:${date.getMinutes()}][${type}]: [${message}]`)
+}
+
+
+// log(new Date(), "DEBUG", "查找到轮播图的bug")
+// log(new Date(), "DEBUG", "查询菜单的bug")
+// log(new Date(), "DEBUG", "查询数据的bug")
+
+
+// 柯里化的优化
+var log = date => type => message => {
+  console.log(`[${date.getHours()}:${date.getMinutes()}][${type}]: [${message}]`)
+}
+
+
+// 如果我现在打印的都是当前时间
+var nowLog = log(new Date())
+nowLog("DEBUG")("查找到轮播图的bug")
+nowLog("FETURE")("新增了添加用户的功能")
+
+
+var nowAndDebugLog = log(new Date())("DEBUG")
+nowAndDebugLog("查找到轮播图的bug")
+nowAndDebugLog("查找到轮播图的bug")
+nowAndDebugLog("查找到轮播图的bug")
+nowAndDebugLog("查找到轮播图的bug")
+
+
+
+
+var nowAndFetureLog = log(new Date())("FETURE")
+nowAndFetureLog("添加新功能~")
+```
+
+
+
+
+
+## 自动柯里化函数
+
+- 目前我们有将多个普通的函数，转成柯里化函数：
+
+![image-20220705075220364](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075220364.png)
+
+
+
+
+
+## 理解组合函数
+
+- 组合（Compose）函数是在JavaScript开发过程中一种对函数的使用技巧、模式：
+
+- - 比如我们现在需要对某一个数据进行函数的调用，执行两个函数fn1和fn2，这两个函数是依次执行的；
+  - 那么如果每次我们都需要进行两个函数的调用，操作上就会显得重复；
+  - 那么是否可以将这两个函数组合起来，自动依次调用呢？
+  - 这个过程就是对函数的组合，我们称之为 组合函数（Compose Function）；
+
+![image-20220705075255550](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075255550.png)
+
+![image-20220705075307339](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075307339.png)
+
+
+
+## 实现组合函数
+
+- 刚才我们实现的compose函数比较简单，我们需要考虑更加复杂的情况：比如传入了更多的函数，在调用 compose函数时，传入了更多的参数：
+
+![image-20220705075335064](D:\studyMaterial\JS高级\笔记\5-JS函数式编程\image-20220705075335064.png)
 
