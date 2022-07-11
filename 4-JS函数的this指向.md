@@ -115,5 +115,321 @@ globalObject
 
 
 
+## 规则二：隐式绑定
+
+另外一种比较常见的调用方式是通过某个对象进行调用的：
+
+- 也就是它的调用位置中，是通过某个对象发起的函数调用。
+
+我们通过几个案例来看一下，常见的默认绑定
+
+![image-20220712074153951](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074153951.png)
+
+![image-20220712074158990](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074158990.png)
+
+![image-20220712074204462](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074204462.png)
 
 
+
+
+
+## 规则三：显示绑定
+
+隐式绑定有一个前提条件：
+
+- 必须在调用的对象内部有一个对函数的引用（比如一个属性）；
+- 如果没有这样的引用，在进行调用时，会报找不到该函数的错误；
+- 正是通过这个引用，间接的将this绑定到了这个对象上；
+
+如果我们不希望在 对象内部 包含这个函数的引用，同时又希望在这个对象上进行强制调用，该怎么做呢？
+
+- JavaScript所有的函数都可以使用call和apply方法（这个和Prototype有关）
+  - 它们两个的区别这里不再展开；
+  - 其实非常简单，第一个参数是相同的，后面的参数，apply为数组，call为参数列表；
+- 这两个函数的第一个参数都要求是一个对象，这个对象的作用是什么呢？就是给this准备的。
+- 在调用这个函数时，会将this绑定到这个传入的对象上。
+
+因为上面的过程，我们明确的绑定了this指向的对象，所以称之为 显示绑定。
+
+
+
+
+
+## call、apply、bind
+
+通过call或者apply绑定this对象
+
+- 显示绑定后，this就会明确的指向绑定的对象
+
+![image-20220712074411688](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074411688.png)
+
+
+
+call和apply有什么区别
+
+![image-20220712074424937](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074424937.png)
+
+传参的形式是不一样的
+
+- 如果我们希望一个函数总是显示的绑定到一个对象上，可以怎么做呢？
+
+![image-20220712074442323](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074442323.png)
+
+![image-20220712074446970](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074446970.png)
+
+
+
+
+
+## 内置函数的绑定思考
+
+有些时候，我们会调用一些JavaScript的内置函数，或者一些第三方库中的内置函数。
+
+- 这些内置函数会要求我们传入另外一个函数；
+- 我们自己并不会显示的调用这些函数，而且JavaScript内部或者第三方库内部会帮助我们执行；
+- 这些函数中的this又是如何绑定的呢？
+
+setTimeout、数组的forEach、div的点击
+
+![image-20220712074541535](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074541535.png)
+
+在实现setTimeout的时候，它的内部是独立函数调用， 所以它是window
+
+![image-20220712074552964](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074552964.png)
+
+
+
+隐式绑定，相当于这样调用
+
+![image-20220712074605127](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074605127.png)
+
+
+
+addEventListener
+
+![image-20220712074618827](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074618827.png)
+
+它可以监听多个
+
+内部应该是把他们放到一个数组里面
+
+然后依次执行内部的this
+
+应该是通过修改this执行 fn.call(boxDiv)
+
+
+
+
+
+数组.forEach/map/filter/find
+
+![image-20220712074657730](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074657730.png)
+
+![image-20220712074703059](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074703059.png)
+
+
+
+显示绑定this,这里是把他绑定为obj
+
+![image-20220712074714200](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074714200.png)
+
+
+
+
+
+## new绑定
+
+JavaScript中的函数可以当做一个类的构造函数来使用，也就是使用new关键字。
+
+使用new关键字来调用函数是，会执行如下的操作：
+
+- 创建一个全新的对象；
+- 这个新对象会被执行prototype连接；
+- 这个新对象会绑定到函数调用的this上（this的绑定在这个步骤完成）；
+- 如果函数没有返回其他对象，表达式会返回这个新对象；
+
+![image-20220712074806653](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074806653.png)
+
+
+
+
+
+## 规则优先级
+
+学习了四条规则，接下来开发中我们只需要去查找函数的调用应用了哪条规则即可，但是如果一个函数调用位置应用了多 条规则，优先级谁更高呢？
+
+- 默认规则的优先级最低
+  - 毫无疑问，默认规则的优先级是最低的，因为存在其他规则时，就会通过其他规则的方式来绑定this
+- 显示绑定优先级高于隐式绑定
+
+![image-20220712074853602](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074853602.png)
+
+call/apply/是一样的
+
+bind的优先级比较
+
+![image-20220712074910052](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074910052.png)
+
+![image-20220712074914515](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074914515.png)
+
+- new绑定优先级高于隐式绑定
+
+![image-20220712074931438](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712074931438.png)
+
+
+
+- new绑定优先级高于bind
+  - new绑定和call、apply是不允许同时使用的，所以不存在谁的优先级更高
+  - new绑定可以和bind一起使用，new绑定优先级更高
+
+![image-20220712075001153](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075001153.png)
+
+
+
+## 总结
+
+![image-20220712075011193](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075011193.png)
+
+
+
+
+
+## this规则之外 – 忽略显示绑定
+
+- 我们讲到的规则已经足以应付平时的开发，但是总有一些语法，超出了我们的规则之外。（神话故事和动漫中总是 有类似这样的人物）
+- 如果在显示绑定中，我们传入一个null或者undefined，那么这个显示绑定会被忽略，使用默认规则：
+
+![image-20220712075043495](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075043495.png)
+
+
+
+
+
+## this规则之外 - 间接函数引用
+
+另外一种情况，创建一个函数的 间接引用，这种情况使用默认绑定规则。
+
+- 赋值(obj2.foo = obj1.foo)的结果是foo函数
+- foo函数被直接调用，那么是默认绑定；
+
+![image-20220712075119395](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075119395.png)
+
+![image-20220712075124210](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075124210.png)
+
+![image-20220712075129199](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075129199.png)
+
+
+
+
+
+## 箭头函数 arrow function
+
+箭头函数是ES6之后增加的一种编写函数的方法，并且它比函数表达式要更加简洁：
+
+- 箭头函数不会绑定this、arguments属性；
+- 箭头函数不能作为构造函数来使用（不能和new一起来使用，会抛出错误）；
+
+箭头函数如何编写呢？
+
+- (): 函数的参数
+- {}: 函数的执行体
+
+![image-20220712075219439](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075219439.png)
+
+![image-20220712075223921](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075223921.png)
+
+![image-20220712075229420](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075229420.png)
+
+![image-20220712075234506](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075234506.png)
+
+![image-20220712075239800](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075239800.png)
+
+
+
+
+
+
+
+## this规则之外 – ES6箭头函数
+
+在ES6中新增一个非常好用的函数类型：箭头函数
+
+- 这里不再具体介绍箭头函数的用法，可以自行学习。
+
+箭头函数不使用this的四种标准规则（也就是不绑定this），而是根据外层作用域来决定this。
+
+![image-20220712075316311](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075316311.png)
+
+
+
+我们来看一个模拟网络请求的案例：
+
+- 这里我使用setTimeout来模拟网络请求，请求到数据后如何可以存放到data中呢？
+- 我们需要拿到obj对象，设置data；
+- 但是直接拿到的this是window，我们需要在外层定义：var _this = this
+- 在setTimeout的回调函数中使用_this就代表了obj对象
+
+![image-20220712075348075](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075348075.png)
+
+
+
+
+
+## ES6箭头函数（arrow function）this
+
+之前的代码在ES6之前是我们最常用的方式，从ES6开始，我们会使用箭头函数：
+
+- 为什么在setTimeout的回调函数中可以直接使用this呢？
+- 因为箭头函数并不绑定this对象，那么this引用就会从上层作用于中找到对应的this
+
+![image-20220712075423979](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075423979.png)
+
+![image-20220712075427715](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075427715.png)
+
+箭头函数不绑定this,那么去上层作用域找，就找了了getData，getData函数中的this指向的是obj，所以箭头函数中的this指向了obj,可以给data赋值了
+
+![image-20220712075439307](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075439307.png)
+
+思考：如果getData也是一个箭头函数，那么setTimeout中的回调函数中的this指向谁呢？
+
+
+
+
+
+## 面试题一：
+
+![image-20220712075504967](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075504967.png)
+
+![image-20220712075510635](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075510635.png)
+
+
+
+
+
+## 面试题二：
+
+![image-20220712075525015](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075525015.png)
+
+![image-20220712075529325](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075529325.png)
+
+
+
+
+
+## 面试题三：
+
+![image-20220712075543362](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075543362.png)
+
+![image-20220712075548733](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075548733.png)
+
+
+
+
+
+## 面试题四：
+
+![image-20220712075605605](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075605605.png)
+
+![image-20220712075610510](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075610510.png)
+
+![image-20220712075615550](D:\studyMaterial\JS高级\笔记\4-JS函数的this指向\image-20220712075615550.png)
