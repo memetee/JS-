@@ -421,8 +421,8 @@ const newNames = [...names, ...iterableObj];
 const obj  = {name: 'why', age: 18}
 for(const item of obj){
     
-} // 对象是不可以for遍历的
-const newObj = {...obj}	// 对象是可以进行展开运算符的
+} // 对象是不可以for...of遍历的
+const newObj = {...obj}	// 对象是可以进行展开运算符的,但是用的不是迭代器
 
 // 那么为什么对象不可以通过for遍历，却可以使用展开运算符呢
 // ES9(ES2018) 新增了一个特性，要求在对象中是可以使用展开运算符的
@@ -432,6 +432,37 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 ```
 
 
+
+解构语法
+
+```js
+const [name1, name2] = names 	// 迭代器实现的
+const {name, age} = obj	// 非迭代器实现的，新增的特性
+```
+
+
+
+创建一些其他对象时
+
+ ![image-20220713065052746](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713065052746.png)
+
+让我们传入的是可迭代对象
+
+```js
+const set1 = new Set(iterableObj);
+const set new Set([1,  2, 3]);
+// 上面都是可迭代对象
+
+const arr1 = Array.from(arguments)	// 将arguments转成数组
+// Array.from接收的也是一个可迭代对象
+
+// promise.all 接收的也是也是一个可迭代对象，它会将每一个值包裹成promise，然后执行.then
+Promise.all(iterableObj).then(res => {
+    console.log(res)
+})
+```
+
+这些就是常见的可迭代对象场景
 
 
 
@@ -449,6 +480,181 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 - 教室中有自己的位置、名称、当前教室的学生；
 - 这个教室可以进来新学生（push）；
 - 创建的教室对象是可迭代对象；
+
+```js
+class Person{
+    
+}
+const p1 = new Person()
+const p2 = new Person()
+const p3 = new Person()
+
+for(const item of p1){}
+// 我们自己创建的类不是一个可迭代对象
+//但是我们希望它是可迭代对象
+```
+
+
+
+```js
+class ClassRoom{
+  constructor(address, name, students) {
+      this.address = address;
+      this.anme = name;
+      this.students = students;
+  }
+  entry(newStudent) {
+      this.students.push(newStudent)
+  }
+
+  // 所以要这样写
+  [Symbol.iterator]() {
+    let index = 0;
+    return {
+      next:() => {
+        if(index < this.students.length) {
+          return {
+            value: this.students[index++],
+            done: false
+          }
+        }else {
+          return{
+            value: undefined,
+            done: true
+          }
+        }
+      }
+    }
+  }
+}
+const classRoom = new ClassRoom('3幢5楼200', '计算机教室', ['james', 'curry', 'wts'])
+classRoom.entry('lilei');
+
+for(const item of classroom){}  // 不是可迭代对象
+
+// 逻辑是这样，但是有一个弊端，假如创建多个实例呢？又要写一遍吗
+classRoom[Symbol.iterator] = function () {
+  return {
+      next: function () {
+          
+      }
+  }
+}
+```
+
+
+
+这样就把class类变成了可迭代对象
+
+![image-20220713071401549](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713071401549.png)
+
+
+
+假如我们在某种情况下把迭代器停掉
+
+```js
+for(const stu of classRoom) {
+    console.log(stu);
+    if(stu == 'why') break;
+}
+// 我们怎么监听已经停掉了呢？
+// 因为是迭代器停掉了，所以应该在迭代器进行监听的
+
+  // 所以要这样写
+  [Symbol.iterator]() {
+    let index = 0;
+    return {
+      next:() => {
+        if(index < this.students.length) {
+          return {
+            value: this.students[index++],
+            done: false
+          }
+        }else {
+          return{
+            value: undefined,
+            done: true
+          }
+        }
+      },
+      return: () => {
+        console.log('迭代器提前终止了')
+      }
+    }
+  }
+```
+
+但是这种写法还是会报错的
+
+![image-20220713071804343](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713071804343.png)
+
+是因为这个return函数是有要求的，要求我们的return对象返回的应该也是一个对象，并且有done和value
+
+```js
+return: () => {
+    console.log('迭代器停止了')
+    return {done: true, value: undefined}
+}
+```
+
+![image-20220713072044960](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713072044960.png)
+
+这样，迭代器就可以监听到了
+
+```js
+class ClassRoom{
+  constructor(address, name, students) {
+      this.address = address;
+      this.anme = name;
+      this.students = students;
+  }
+  entry(newStudent) {
+      this.students.push(newStudent)
+  }
+
+  // 所以要这样写
+  [Symbol.iterator]() {
+    let index = 0;
+    return {
+      next:() => {
+        if(index < this.students.length) {
+          return {
+            value: this.students[index++],
+            done: false
+          }
+        }else {
+          return{
+            value: undefined,
+            done: true
+          }
+        }
+      },
+      return: () => {
+        console.log('迭代器提前终止了')
+        return {done: true, value: undefined}
+      }
+    }
+  }
+}
+const classRoom = new ClassRoom('3幢5楼200', '计算机教室', ['james', 'curry', 'wts'])
+classRoom.entry('lilei');
+
+// for(const item of classroom){}  // 不是可迭代对象
+
+// 逻辑是这样，但是有一个弊端，假如创建多个实例呢？又要写一遍吗
+// classRoom[Symbol.iterator] = function () {
+//   return {
+//       next: function () {
+          
+//       }
+//   }
+// }
+
+for(const item of classRoom) {
+  console.log(item);
+  if(item === 'wts') break;
+}
+```
 
 
 
@@ -479,11 +685,11 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 
 
 
-## 什么是生成器？
+## 什么是生成器？ 
 
 生成器是ES6中新增的一种函数控制、使用的方案，它可以让我们更加灵活的控制函数什么时候继续执行、暂停执 行等。
 
-平时我们会编写很多的函数，这些函数终止的条件通常是返回值或者发生了异常。
+生成器是跟函数有关系的，迭代器是跟对象有关系的
 
 生成器函数也是一个函数，但是和普通的函数有一些区别：
 
@@ -492,6 +698,63 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 - 最后，生成器函数的返回值是一个Generator（生成器）：
   - 生成器事实上是一种特殊的迭代器；
   - MDN：Instead, they return a special type of iterator, called a Generator.
+
+![image-20220713072610081](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713072610081.png)
+
+现在提一个要求在执行到第二行和第三行的时候，暂停一下，不要往后执行了
+
+可以return，但是后面的代码永远执行不到了，但是要求是暂停，暂停之后是可以恢复的
+
+这个时候就需要生成器来执行了
+
+用生成器就可以精准的控制什么时候继续执行，什么时候暂停执行
+
+生成器是和函数结合在一起的，生成器函数通常有一个结果，它返回的结果才叫生成器
+
+```js
+function* foo() {
+  
+}
+```
+
+![image-20220713073615226](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713073615226.png)
+
+调用生成器函数时，会给我们返回一个生成器对象
+
+![image-20220713073709508](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713073709508.png)
+
+想让代码执行，该怎么做呢
+
+![image-20220713074004092](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074004092.png)
+
+![image-20220713074031405](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074031405.png)
+
+```js
+function* foo() {
+  console.log('函数开始执行')
+  const value1 = 100;
+  console.log(value1);
+  yield;
+
+  const value2 = 200;
+  console.log(value2);
+  yield;
+
+  const value3 = 300;
+  console.log(value3)
+  yield;
+
+  console.log('函数执行结束')
+}
+const generator = foo();
+
+// 开始执行第一段代码
+generator.next();
+generator.next();
+generator.next();
+generator.next();
+generator.next();
+```
 
 
 
@@ -513,6 +776,60 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 
 
 
+迭代器在前面讲的时候我们说过它的next是有返回值的， 返回的是一个对象 {done: true, value: undefiend} 这种对象
+
+那么生成器有没有返回值呢
+
+```js
+console.log(generator.next())
+```
+
+![image-20220713074404564](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074404564.png)
+
+![image-20220713074539105](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074539105.png)
+
+可以发现他就是一个迭代器，因为返回的格式和迭代器的格式是一样的，只不过它的value是一个undefined
+
+![image-20220713074657513](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074657513.png)
+
+最后一次没有yield了，也就是说，相当于最后一次以后，相当于这个函数写了 return undefined了
+
+那能不能有返回值呢
+
+比如
+
+![image-20220713074908553](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713074908553.png)
+
+如果有返回值，就会将这个返回值作为value了
+
+
+
+当我们的生成器函数，如果遇到yield，它会暂停函数的执行
+
+如果遇到了return，它会整个函数停掉了，并且调用的next函数返回的done变成true，下面的所有的yield都不会执行了
+
+![image-20220713075210199](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220713075210199.png)
+
+![image-20220714063911899](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714063911899.png)
+
+这里的 yield 也可以是一个表达式，比如 yield value1 * 10
+
+我们可以通过
+
+```js
+generator.next()
+```
+
+这种方式拿到yield的返回值
+
+![image-20220714065121070](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714065121070.png)
+
+
+
+第二段代码，应该是第二个next的时候
+
+
+
 
 
 
@@ -529,6 +846,51 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 
 
 
+第二个yield这样传参
+
+![image-20220714065517255](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714065517255.png)
+
+```js
+function* foo() {
+  console.log('函数开始执行')
+  const value1 = 100;
+  console.log(value1);
+  const n = yield value1;
+
+  const value2 = 200 * n;
+  console.log(value2, n);
+  const y = yield;
+
+  const value3 = 300;
+  console.log(value3, y)
+  const z = yield;
+
+  console.log('函数执行结束', z)
+  return '123'
+}
+const generator = foo();
+
+// 开始执行第一段代码
+console.log(generator.next());
+console.log(generator.next(10));  // 这个传给的是第二段代码的yield,也就是n，但是从第一段yield的返回值拿到
+console.log(generator.next(20));  // 这个传给的是第三段代码的yield,也就是n，但是从第二段yield的返回值拿到
+console.log(generator.next(25));  // 这个传给的是第四段代码的yield,也就是n，但是从第三段yield的返回值拿到
+```
+
+
+
+那么第一段代码怎么传呢？
+
+首先第一段代码，一般很少给他传递参数
+
+首先我们在调用函数的时候可以给他传入参数
+
+![image-20220714070208376](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714070208376.png)
+
+
+
+
+
 
 
 ## 生成器提前结束 – return函数
@@ -538,6 +900,36 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 - return传值后这个生成器函数就会结束，之后调用next不会继续生成值了；
 
 ![image-20220711074834662](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711074834662.png)
+
+
+
+```js
+
+function* foo(num) {
+  const value1 = 100 * num
+  console.log('第一段代码执行', value1);
+  const n = yield value1;
+  
+  // return是在第一个next之后调用的，所以相当于是在这里加了return
+  // 这个n是return传的参数，实际上和next传参一样，也是从上面一个yield的返回值
+  // 中拿到这个n的
+  // return n
+
+  const value2 = 200 * n;
+  console.log('第二段代码执行', value2)
+  const count = yield value2;
+}
+
+const generator = foo(10);
+console.log(generator.next());	// { value: 1000, done: false }
+console.log(generator.return(30))	// { value: 30, done: true }
+// 并且以后的代码都会终止掉
+console.log(generator.next()); // {value: undefined, done: true}
+```
+
+
+
+
 
 
 
@@ -551,6 +943,28 @@ const newObj = {...obj}	// 对象是可以进行展开运算符的
 ![image-20220711074912766](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711074912766.png)
 
 ![image-20220711074922038](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711074922038.png)
+
+![image-20220714071805745](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714071805745.png)
+
+既然有异常，那么我们肯定也是可以捕获异常的
+
+![image-20220714071951503](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714071951503.png)
+
+当然throw也是可以传递信息，打印抛出的异常信息
+
+![image-20220714072118608](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714072118608.png)
+
+也可以这样
+
+
+
+throw的应用场景
+
+![image-20220714072245631](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220714072245631.png)
+
+假如上面的结果我不满意，那么我可以终止掉这段代码
+
+
 
 
 
