@@ -972,9 +972,35 @@ throw的应用场景
 
 我们发现生成器是一种特殊的迭代器，那么在某些情况下我们可以使用生成器来替代迭代器：
 
+首先我们自己创建的迭代器
+
+![image-20220725081607691](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725081607691.png)
+
+用生成器来替代迭代器
+
+![image-20220725081658786](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725081658786.png)
+
+我们的目的是每调一次next就返回一个下面这样的对象
+
+那么我们能不能让这个函数返回一个生成器呢？
+
+因为生成器返回的对象可以调next
+
+![image-20220725081920684](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725081920684.png)
+
+
+
+哪怕是这样也可以
+
+![image-20220725082108466](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725082108466.png)
+
+
+
+不过最好这样
+
 ![image-20220711074949285](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711074949285.png)
 
-![image-20220711075002480](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075002480.png)
+
 
 
 
@@ -986,13 +1012,57 @@ throw的应用场景
 
 
 
+![image-20220725082320246](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725082320246.png)
+
+![image-20220725082427817](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725082427817.png)
+
+
+
+如果有一个需求，让我们创建一个函数，这个函数可以迭代一个范围内的数字
+
+![image-20220711075002480](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075002480.png)
+
+
+
 
 
 ## 自定义类迭代 – 生成器实现
 
+我们原来是这样写的
+
+![image-20220725083130695](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725083130695.png)
+
+
+
+class中的函数还可以这样写，发现可以调用的，所以，在class类中定义方法还有这种方式
+
+![image-20220725083442352](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725083442352.png)
+
+这样也可以
+
+![image-20220725083831217](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725083831217.png)
+
+所以symbol可以这样写
+
+![image-20220725083903581](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725083903581.png)
+
+
+
+
+
 在之前的自定义类迭代中，我们也可以换成生成器：
 
 ![image-20220711075101338](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075101338.png)
+
+
+
+迭代的是它
+
+![image-20220725084029446](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725084029446.png)
+
+这里迭代的是class类实例
+
+
 
 
 
@@ -1010,6 +1080,18 @@ throw的应用场景
 
 学完了我们前面的Promise、生成器等，我们目前来看一下异步代码的最终处理方案。
 
+这个是我们以前处理异步的方案
+
+![image-20220725084918321](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725084918321.png)
+
+又比如，你给我一个url，2秒后给你一个什么东西
+
+![image-20220725085004379](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725085004379.png)
+
+
+
+
+
 需求：
 
 - 我们需要向服务器发送网络请求获取数据，一共需要发送三次请求；
@@ -1017,15 +1099,33 @@ throw的应用场景
 - 第三次的请求url依赖于第二次的结果；
 - 依次类推；
 
+例如这种
+
+![image-20220725085115089](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725085115089.png)
+
+
+
 ![image-20220711075237143](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075237143.png)
+
+
+
+如果按照上面那种需求的话，我们可能要这样写，这种也被称为回调地狱
+
+第一种方案
 
 ![image-20220711075250749](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075250749.png)
 
+
+
+第二种方案
+
 ![image-20220711075302953](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075302953.png)
 
+前面讲过，这里return函数实际是一个promise，并且then里面如果有then，那么里面的then会替代外层的then
 
 
 
+第三种方案
 
 ## Generator方案
 
@@ -1034,6 +1134,30 @@ throw的应用场景
 ![image-20220711075327704](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075327704.png)
 
 ![image-20220711075339021](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075339021.png)
+
+
+
+![image-20220725092128179](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725092128179.png)
+
+但是在这里拿到结果之后我们不要在这里用，我们还要传到这里来
+
+![image-20220725092300576](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725092300576.png)
+
+所以我们要执行下一次的next，并且给他传一个参数，那么这个参数就可以传到上面去了
+
+![image-20220725092342712](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725092342712.png)
+
+传过去之后，next执行完了，也就之下了下一个yield
+
+![image-20220725092800081](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725092800081.png)
+
+这样返回的就是第二个yield返回的结果也就是我们后面的value.then拿到的
+
+这样拿到了res，但是我们依然不要用它，依然把他传出去
+
+![image-20220725093224400](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725093224400.png)
+
+但是可以发现下面还是有嵌套，但是他们是有规律的，既然有规律，那么我们可以写成一个递归函数
 
 
 
@@ -1049,3 +1173,105 @@ throw的应用场景
 所以，我们可以封装一个工具函数execGenerator自动执行生成器函数：
 
 ![image-20220711075432481](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220711075432481.png)
+
+
+
+
+
+```js
+
+// 通过自动化函数，获取最后的yield结果
+function execGenerator(genFn) {
+  const generator = genFn()
+  function exec(res) {
+    const result = generator.next(res)
+    if (result.done) {
+      return result.value
+    }
+    result.value.then(res => {
+      exec(res)
+    })
+  }
+  exec()
+}
+
+execGenerator(getData)
+
+// 每一次执行，都新增一些参数
+function* getData() {
+  const res1 = yield requestData("why")
+  const res2 = yield requestData(res1 + "aaa")
+  const res3 = yield requestData(res2 + "bbb")
+  const res4 = yield requestData(res3 + "ccc")
+  console.log(res4)
+}
+
+// request.js
+function requestData(url) {
+  // 异步请求的代码会被放入到executor中
+  return new Promise((resolve, reject) => {
+    // 模拟网络请求
+    setTimeout(() => {
+      // 拿到请求的结果
+      resolve(url)
+    }, 2000);
+  })
+}
+```
+
+
+
+这种代码的阅读性很强
+
+
+
+方式四：
+
+上面这个函数，可能我们自己写不出来，但是npm实际已经有这种包了
+
+叫做 co
+
+```js
+// 每一次执行，都新增一些参数
+function* getData() {
+  const res1 = yield requestData("why")
+  const res2 = yield requestData(res1 + "aaa")
+  const res3 = yield requestData(res2 + "bbb")
+  const res4 = yield requestData(res3 + "ccc")
+  console.log(res4)
+}
+
+// request.js
+function requestData(url) {
+  // 异步请求的代码会被放入到executor中
+  return new Promise((resolve, reject) => {
+    // 模拟网络请求
+    setTimeout(() => {
+      // 拿到请求的结果
+      resolve(url)
+    }, 2000);
+  })
+}
+
+npm install co
+
+const co = require('co');
+co(getData);
+```
+
+
+
+所以社区里早就有了这个函数了
+
+这个包就是TJ写的
+
+
+
+第五种方案
+
+![image-20220725103853060](D:\studyMaterial\JS高级\笔记\19-20_Iterator-Generator\image-20220725103853060.png)
+
+
+
+async await的本质就是上面的生成器函数，它们是上面的一个语法糖
+
